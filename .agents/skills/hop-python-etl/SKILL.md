@@ -72,6 +72,8 @@ Fuente única: `project-config.json` → `config.variables`. Entorno: `./switch-
 
 **Secretos:** no commitear passwords reales en `project-config.json` / `environments/`.
 
+**Dos SO:** la corrida Linux (`init.sh`, `wf_main.hwf`) y la Windows (`init.bat`, `wf_main_windows.hwf`) van juntas. Skill [`linux-windows-parity`](../linux-windows-parity/SKILL.md).
+
 ## Gotchas
 
 | Síntoma | Causa |

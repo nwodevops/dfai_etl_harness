@@ -14,9 +14,10 @@ ETL **Apache Hop + H2 in-memory + Python**. Arquitectura: [`docs/arquitectura.md
 | [`docs/harness/workflow.md`](docs/harness/workflow.md) | Roles líder / implementador / revisor |
 | [`docs/harness/platform.md`](docs/harness/platform.md) | Hop, H2, variables |
 
-## Skill
+## Skills
 
-- [`.agents/skills/hop-python-etl/SKILL.md`](.agents/skills/hop-python-etl/SKILL.md)
+- [`.agents/skills/hop-python-etl/SKILL.md`](.agents/skills/hop-python-etl/SKILL.md) — capas Hop / H2 / Python
+- [`.agents/skills/linux-windows-parity/SKILL.md`](.agents/skills/linux-windows-parity/SKILL.md) — el cambio de Linux se espeja en `init.bat` y `wf_main_windows.hwf`
 
 ## Inicio rápido
 
