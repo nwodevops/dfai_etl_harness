@@ -21,7 +21,16 @@ echo ==^> Harness Windows DFAI: entorno %ENV%
 
 set "PY=%~dp0.venv\Scripts\python.exe"
 if not exist "%PY%" set "PY=python"
-set "LOG=%TEMP%\dfai_harness_%RANDOM%.log"
+
+REM Bitácora del día en logs\. RUNLOG es solo esta corrida; se le agrega al diario y no se borra el diario.
+set "LOGDIR=%~dp0logs"
+if not exist "%LOGDIR%" mkdir "%LOGDIR%"
+for /f %%a in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd"') do set "STAMP=%%a"
+set "LOGFILE=%LOGDIR%\init_%STAMP%.log"
+set "RUNLOG=%TEMP%\dfai_run_%RANDOM%.log"
+set "STEPLOG=%TEMP%\dfai_step_%RANDOM%.log"
+echo === inicio %date% %time% env=%ENV% === > "%RUNLOG%"
+echo === inicio %date% %time% env=%ENV% ===
 
 REM ---------------------------------------------------------------------------
 echo ==^> Validando feature_list.json
@@ -77,93 +86,88 @@ if "%SCHEMA%"=="" (
 )
 echo ==^> Esquema destino Oracle: %SCHEMA%
 
-REM ---------------------------------------------------------------------------
-echo ==^> Paso 1/4: Reset H2 clean
-call "%~dp0scripts\step_reset_h2.bat"
+REM :runstep deja el exit code del .bat. No hace goto: un goto dentro de call no corta al caller.
+echo ==^> Paso 1/5: Reset H2 clean
+echo ==^> Paso 1/5: Reset H2 clean>> "%RUNLOG%"
+call :runstep "%~dp0scripts\step_reset_h2.bat"
 if errorlevel 1 (
   echo FAIL: reset H2
+  echo FAIL: reset H2>> "%RUNLOG%"
   goto :fail
 )
 
-echo ==^> Paso 2/4: Python create STG
-call "%~dp0scripts\step_create_stg.bat"
+echo ==^> Paso 2/5: Python create STG
+echo ==^> Paso 2/5: Python create STG>> "%RUNLOG%"
+call :runstep "%~dp0scripts\step_create_stg.bat"
 if errorlevel 1 (
   echo FAIL: python\create_stg.py
+  echo FAIL: python\create_stg.py>> "%RUNLOG%"
   goto :fail
 )
 
-REM ---------------------------------------------------------------------------
-echo ==^> Paso 3/4: Cargar Sheets a H2
-call "%~dp0scripts\step_cargar_sheets.bat" > "%LOG%" 2>&1
+echo ==^> Paso 3/5: Cargar Sheets a H2
+echo ==^> Paso 3/5: Cargar Sheets a H2>> "%RUNLOG%"
+call :runstep "%~dp0scripts\step_cargar_sheets.bat"
 if errorlevel 1 (
-  type "%LOG%"
   echo FAIL: python\cargar_sheets.py ^(revisa las hojas y client_secret.json^)
+  echo FAIL: python\cargar_sheets.py>> "%RUNLOG%"
   goto :fail
 )
-type "%LOG%"
 
-REM ---------------------------------------------------------------------------
-echo ==^> Paso 4/4: Python main ^(logica -^> Oracle %SCHEMA%^.DW_DFAI_*^)
-call "%~dp0scripts\step_main.bat" >> "%LOG%" 2>&1
+echo ==^> Paso 4/5: Python main ^(logica -^> Oracle %SCHEMA%.DW_DFAI_*^)
+echo ==^> Paso 4/5: Python main>> "%RUNLOG%"
+call :runstep "%~dp0scripts\step_main.bat"
 if errorlevel 1 (
-  type "%LOG%"
   echo FAIL: python\main.py
-  goto :fail
-)
-type "%LOG%"
-
-REM ---------------------------------------------------------------------------
-echo ==^> Comprobando salidas
-findstr /c:"Salida RESULTADO" "%LOG%" >nul 2>&1
-if errorlevel 1 (
-  echo FAIL: no hay "Salida RESULTADO" en el log
+  echo FAIL: python\main.py>> "%RUNLOG%"
   goto :fail
 )
 
-findstr /c:"Excel:" "%LOG%" >nul 2>&1
+findstr /c:"Excel:" "%RUNLOG%" >nul 2>&1
 if errorlevel 1 echo AVISO: no se escribio output\resultado.xlsx
 
-REM Acumula fallos en un flag en vez de usar subrutinas: un `goto :fail`
-REM dentro de un `call` no aborta el `for` que lo invoco (el exit code de un
-REM for solo refleja su ultima iteracion).
-set "FAILED="
-
-for %%t in (STG_GS1_RSDRD STG_GS2_MEDIDAS STG_GS3_MULTAS) do (
-  findstr /r /c:"^%%t: [1-9][0-9]* filas$" "%LOG%" >nul 2>&1
-  if errorlevel 1 (
-    echo FAIL: sin filas en %%t
-    set "FAILED=1"
-  )
-)
-
-for %%t in (DW_DFAI_RSDRD DW_DFAI_MEDIDAS_CORRECTIVAS DW_DFAI_MULTAS) do (
-  findstr /r /c:"^Oracle %SCHEMA%.%%t: [1-9][0-9]* filas$" "%LOG%" >nul 2>&1
-  if errorlevel 1 (
-    echo FAIL: sin filas en Oracle %SCHEMA%.%%t
-    set "FAILED=1"
-  )
-)
-
-if defined FAILED goto :fail
-
-REM Cualquier ${ en el log es una variable Hop sin resolver.
-findstr /c:"${" "%LOG%" >nul 2>&1
+findstr /c:"${" "%RUNLOG%" >nul 2>&1
 if not errorlevel 1 (
   echo FAIL: el log contiene variables Hop sin resolver ^(${VAR}^)
+  echo FAIL: variables Hop sin resolver>> "%RUNLOG%"
   goto :fail
 )
 
-del /q "%LOG%" >nul 2>&1
+echo ==^> Paso 5/5: Verificar conteos en H2 y Oracle
+echo ==^> Paso 5/5: Verificar conteos en H2 y Oracle>> "%RUNLOG%"
+call :runstep "%~dp0scripts\step_verificar.bat"
+if errorlevel 1 (
+  echo FAIL: conteos STG y Oracle no coinciden
+  echo FAIL: conteos STG y Oracle no coinciden>> "%RUNLOG%"
+  goto :fail
+)
 
 echo.
-echo HARNESS OK -^> Sheets -^> H2 STG_GS* -^> logica -^> Oracle %SCHEMA%.DW_DFAI_* ^(ver CHECKPOINTS.md^)
+echo HARNESS OK -^> conteos leidos de H2 y Oracle. Bitacora: %LOGFILE%
+echo.>> "%RUNLOG%"
+echo HARNESS OK esquema %SCHEMA%>> "%RUNLOG%"
+call :savelog
 endlocal
 exit /b 0
 
 REM ---------------------------------------------------------------------------
+:runstep
+call "%~1" > "%STEPLOG%" 2>&1
+set "RC=%ERRORLEVEL%"
+type "%STEPLOG%"
+type "%STEPLOG%" >> "%RUNLOG%"
+exit /b %RC%
+
+:savelog
+if exist "%RUNLOG%" type "%RUNLOG%" >> "%LOGFILE%"
+if exist "%RUNLOG%" del /q "%RUNLOG%" >nul 2>&1
+if exist "%STEPLOG%" del /q "%STEPLOG%" >nul 2>&1
+exit /b 0
+
 :fail
-if exist "%LOG%" del /q "%LOG%" >nul 2>&1
 echo.
-echo HARNESS FAIL -^> revisa el error de arriba.
+echo HARNESS FAIL -^> revisa el error de arriba. Bitacora: %LOGFILE%
+echo HARNESS FAIL>> "%RUNLOG%"
+call :savelog
 endlocal
 exit /b 1

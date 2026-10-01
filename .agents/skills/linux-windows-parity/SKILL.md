@@ -35,7 +35,7 @@ Hoy los cuatro pasos son:
 3. `scripts/step_cargar_sheets.bat` → `python/cargar_sheets.py`
 4. `scripts/step_main.bat` → `python/main.py`
 
-Si `init.sh` gana un grep de conteo, `init.bat` gana el mismo grep. El log de ambos debe poder decir `HARNESS OK` con las mismas tablas.
+Si `init.sh` gana un grep de conteo, `init.bat` gana el mismo grep. El log de ambos debe poder decir `HARNESS OK` con las mismas tablas. Los dos escriben en `logs/` (skill `etl-run-logs`). Un temporal que se borra al salir no cuenta.
 
 ## Qué no se bifurca
 

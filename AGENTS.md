@@ -18,6 +18,7 @@ ETL **Apache Hop + H2 in-memory + Python**. Arquitectura: [`docs/arquitectura.md
 
 - [`.agents/skills/hop-python-etl/SKILL.md`](.agents/skills/hop-python-etl/SKILL.md) — capas Hop / H2 / Python
 - [`.agents/skills/linux-windows-parity/SKILL.md`](.agents/skills/linux-windows-parity/SKILL.md) — el cambio de Linux se espeja en `init.bat` y `wf_main_windows.hwf`
+- [`.agents/skills/etl-run-logs/SKILL.md`](.agents/skills/etl-run-logs/SKILL.md) — cada corrida deja bitácora en `logs/`
 
 ## Inicio rápido
 
@@ -53,6 +54,7 @@ Esquema vía `DB_ORA_DW_SCHEMA`; credenciales Oracle solo en `docs/credenciales/
 3. **Sin `${VAR}` literal** en logs Hop = variable mal definida.
 4. `logica/` no abre conexiones. I/O en `python/io/`.
 5. **No solapar corridas**: `mem:csep`:9092 es compartido con los repos hermanos y todos hacen `DROP ALL OBJECTS`.
+6. **Corrida en `logs/`**: `logs/init_YYYYMMDD.log` y `logs/wf_main_YYYYMMDD.log`. stdout o un temporal que se borra no cuentan. Skill `etl-run-logs`.
 
 ## Nuevo proyecto
 

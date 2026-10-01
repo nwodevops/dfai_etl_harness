@@ -16,9 +16,10 @@ REM init.bat local   REM contra el Oracle local
 REM HARNESS OK
 ```
 
-Comprueba: H2, `create_stg.py`, `cargar_sheets.py`, `main.py`, salida `RESULTADO`,
-filas en las 3 `STG_GS*` y en las 3 `Oracle <esquema>.DW_DFAI_*`, y que el log
-no tenga `${VAR}` literal.
+Comprueba: H2, `create_stg.py`, `cargar_sheets.py`, `main.py`, y al final
+`python/verificar.py`, que hace `SELECT COUNT(*)` en las 3 `STG_GS*` y en las
+3 `<esquema>.DW_DFAI_*`. Falla si alguna está en 0 o los pares no coinciden.
+No alcanza con el print de la carga. La bitácora queda en `logs/init_YYYYMMDD.log`.
 
 ## Automática Hop
 

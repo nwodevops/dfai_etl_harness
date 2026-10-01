@@ -74,6 +74,8 @@ Fuente única: `project-config.json` → `config.variables`. Entorno: `./switch-
 
 **Dos SO:** la corrida Linux (`init.sh`, `wf_main.hwf`) y la Windows (`init.bat`, `wf_main_windows.hwf`) van juntas. Skill [`linux-windows-parity`](../linux-windows-parity/SKILL.md).
 
+**Logs:** la corrida se guarda en `logs/`. Skill [`etl-run-logs`](../etl-run-logs/SKILL.md).
+
 ## Gotchas
 
 | Síntoma | Causa |
