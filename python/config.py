@@ -86,6 +86,7 @@ def conn_vars(connection: str, variables: dict[str, str]) -> dict[str, str]:
         "database": variables.get(f"{prefix}_DATABASE", ""),
         "username": variables.get(f"{prefix}_USERNAME", ""),
         "password": variables.get(f"{prefix}_PASSWORD", ""),
+        "schema": variables.get(f"{prefix}_SCHEMA", ""),
     }
 
 
@@ -97,6 +98,9 @@ def require_live_conn(connection: str, variables: dict[str, str]) -> dict[str, s
             f"Credenciales placeholder para {connection}. "
             "Completa project-config.json / environments/."
         )
+    if not cv["schema"]:
+        # Sin *_SCHEMA el destino depende del usuario (común: APP == usuario).
+        cv["schema"] = cv["username"].strip().upper()
     return cv
 
 

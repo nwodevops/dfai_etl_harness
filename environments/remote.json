@@ -111,6 +111,11 @@
       "description": "Service Oracle DW"
     },
     {
+      "name": "DB_ORA_DW_SCHEMA",
+      "value": "REPOCSEP",
+      "description": "Esquema destino de DW_DFAI_* (remote = REPOCSEP)"
+    },
+    {
       "name": "DB_ORA_DW_USERNAME",
       "value": "<USUARIO>",
       "description": "Usuario Oracle DW"

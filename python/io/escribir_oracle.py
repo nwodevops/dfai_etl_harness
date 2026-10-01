@@ -1,4 +1,8 @@
-"""SALIDA: DataFrames de logica/ → tablas APP.DW_DFAI_* (reemplazo total)."""
+"""SALIDA: DataFrames de logica/ → tablas <esquema>.DW_DFAI_* (reemplazo total).
+
+El esquema destino es DB_ORA_DW_SCHEMA (local: APP, remote: REPOCSEP). Si no
+esta definido cae al usuario de conexion en mayusculas.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,6 @@ import pandas as pd
 from config import require_live_conn
 from introspect.h2_ddl import sanitize_ident
 
-_SCHEMA = "APP"
 _VARCHAR = 4000
 _BATCH = 400
 
@@ -82,6 +85,7 @@ def escribir_oracle(
     if faltan:
         raise ValueError(f"Faltan DataFrames para Oracle: {faltan}")
 
+    schema = require_live_conn("oracle_dw", variables)["schema"]
     conn = _conectar(variables)
     conteos: dict[str, int] = {}
     try:
@@ -93,14 +97,14 @@ def escribir_oracle(
                     raise ValueError(f"{clave} no es un DataFrame")
                 cols = _columnas(df)
                 rows = _filas(df)
-                qualified = f'{_SCHEMA}."{tabla}"'
+                qualified = f'{schema}."{tabla}"'
                 cur.execute(
                     """
                     SELECT COUNT(*)
                     FROM ALL_TABLES
                     WHERE OWNER = :owner AND TABLE_NAME = :tname
                     """,
-                    {"owner": _SCHEMA, "tname": tabla},
+                    {"owner": schema, "tname": tabla},
                 )
                 if int(cur.fetchone()[0]) > 0:
                     cur.execute(f"DROP TABLE {qualified} PURGE")
@@ -113,7 +117,7 @@ def escribir_oracle(
                     for offset in range(0, len(rows), _BATCH):
                         cur.executemany(sql, rows[offset : offset + _BATCH])
                 conteos[tabla] = len(rows)
-                print(f"Oracle {_SCHEMA}.{tabla}: {len(rows)} filas")
+                print(f"Oracle {schema}.{tabla}: {len(rows)} filas")
         finally:
             cur.close()
         conn.commit()
