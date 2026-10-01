@@ -2,7 +2,7 @@
 
 Zona de pegado: **un solo `.py`** (auto-descubierto por `python/main.py`).
 
-- Demo: [`demo.py`](demo.py)
+- Registro DFAI: [`dfai_registro.py`](dfai_registro.py)
 - Plantilla: [`../python/plantilla_logica.py`](../python/plantilla_logica.py)
 - Contrato: [`../python/CONTRATO.md`](../python/CONTRATO.md)
 

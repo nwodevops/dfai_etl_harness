@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Harness — smoke demo del arquetipo (H2 + Python, sin staging externo).
+# Harness — Sheets DFAI → H2 STG_* → Oracle APP.DW_DFAI_*
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -50,9 +50,16 @@ step "Reset H2 + DDL"
 step "Python create STG"
 "$PY" python/create_stg.py
 
-step "Python main (demo)"
+step "Cargar Sheets a H2"
 set +e
-"$PY" python/main.py 2>&1 | tee "$LOG"
+"$PY" python/cargar_sheets.py 2>&1 | tee "$LOG"
+CARGA_RC=${PIPESTATUS[0]}
+set -e
+[ "$CARGA_RC" -eq 0 ] || fail "python/cargar_sheets.py terminó con código $CARGA_RC"
+
+step "Python main"
+set +e
+"$PY" python/main.py 2>&1 | tee -a "$LOG"
 MAIN_RC=${PIPESTATUS[0]}
 set -e
 [ "$MAIN_RC" -eq 0 ] || fail "python/main.py terminó con código $MAIN_RC"
@@ -60,6 +67,12 @@ set -e
 step "Comprobando salidas"
 grep -q "Salida RESULTADO" "$LOG" || fail "no hay Salida RESULTADO en el log"
 grep -q "Excel:" "$LOG" || warn "no se escribió Excel (opcional si falla openpyxl)"
+for tabla in STG_GS1_RSDRD STG_GS2_MEDIDAS STG_GS3_MULTAS; do
+  grep -Eq "^${tabla}: [1-9][0-9]* filas$" "$LOG" || fail "sin filas en ${tabla}"
+done
+for tabla in DW_DFAI_RSDRD DW_DFAI_MEDIDAS_CORRECTIVAS DW_DFAI_MULTAS; do
+  grep -Eq "^Oracle APP.${tabla}: [1-9][0-9]* filas$" "$LOG" || fail "sin filas en Oracle APP.${tabla}"
+done
 if grep -q '\${[A-Za-z0-9_]\+}' "$LOG"; then
   fail "log contiene variables Hop sin resolver"
 fi

@@ -1,5 +1,5 @@
 {
-  "project": "mi_etl",
+  "project": "dfai_registro_mensual",
   "reglas": {
     "una_feature_activa": "Como máximo un item con status in_progress",
     "verificacion": "./init.sh debe terminar en HARNESS OK",
@@ -8,22 +8,22 @@
   "features": [
     {
       "id": "fase-1-entorno",
-      "title": "Hop + H2 + Python + harness",
-      "status": "pending",
+      "title": "H2 + Oracle local (DB_ORA_DW_*) + harness",
+      "status": "done",
       "criterio": "CHECKPOINTS.md#fase-1",
-      "doc": "README.md"
+      "doc": "docs/credenciales/local.txt"
     },
     {
       "id": "fase-2-fuentes-stg",
-      "title": "inputs.yaml + pl_stage_* en Hop",
-      "status": "pending",
+      "title": "Sheets RSDRD, MEDIDAS CORRECTIVAS y MULTAS → STG_GS*",
+      "status": "done",
       "criterio": "CHECKPOINTS.md#fase-2",
-      "doc": ".agents/skills/hop-python-etl/inputs.example.yaml"
+      "doc": "inputs.yaml"
     },
     {
       "id": "fase-3-logica",
-      "title": "logica/ + salida Excel",
-      "status": "pending",
+      "title": "logica/dfai_registro.py → APP.DW_DFAI_*",
+      "status": "done",
       "criterio": "CHECKPOINTS.md#fase-3",
       "doc": "python/CONTRATO.md"
     }

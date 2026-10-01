@@ -1,6 +1,28 @@
-# Manifiesto de fuentes STG. Python (create_stg.py) crea DDL en H2; Hop extrae filas.
-#
-# Ejemplos: .agents/skills/hop-python-etl/inputs.example.yaml
-# Smoke del arquetipo: sources vacío (solo DEMO_TABLA_EJEMPLO en 01_schema.sql).
+# Manifiesto de fuentes STG. Python (create_stg.py) crea DDL en H2.
+# La carga de filas la hace python/cargar_sheets.py (Hop no trae Google Sheets).
+# data_start_row: primera fila de datos (1-based). La fila de etiquetas se salta.
 
-sources: []
+sources:
+  - stg_table: STG_GS1_RSDRD
+    type: sheets
+    spreadsheet_key: "1sNorVhmUc3SCUL3CJO8zdjYiRQ_hhoDPP26h-BKzNyA"
+    worksheet: "RSDRD"
+    header_row: 1
+    data_start_row: 3
+    types: varchar
+
+  - stg_table: STG_GS2_MEDIDAS
+    type: sheets
+    spreadsheet_key: "1sNorVhmUc3SCUL3CJO8zdjYiRQ_hhoDPP26h-BKzNyA"
+    worksheet: "MEDIDAS CORRECTIVAS"
+    header_row: 1
+    data_start_row: 3
+    types: varchar
+
+  - stg_table: STG_GS3_MULTAS
+    type: sheets
+    spreadsheet_key: "1sNorVhmUc3SCUL3CJO8zdjYiRQ_hhoDPP26h-BKzNyA"
+    worksheet: "MULTAS"
+    header_row: 2
+    data_start_row: 3
+    types: varchar

@@ -76,10 +76,18 @@ def main() -> int:
     for nombre, df in salidas.items():
         print(f"Salida {nombre}: {len(df)} filas x {len(df.columns)} columnas")
 
+    claves_dw = ("RSDRD", "MEDIDAS", "MULTAS")
+    faltan = [k for k in claves_dw if not isinstance(ns.get(k), pd.DataFrame)]
+    if faltan:
+        raise SystemExit(f"La lógica no dejó DataFrames {faltan}")
+
+    oracle = _load("escribir_oracle", HERE / "io" / "escribir_oracle.py")
+    oracle.escribir_oracle({k: ns[k] for k in claves_dw}, root, variables)
+
     escribir = _load("escribir_excel", HERE / "io" / "escribir_excel.py")
     escribir.escribir_excel(salidas[SALIDA_DF], root)
 
-    print("Listo (H2 -> logica -> Excel).")
+    print("Listo (H2 -> logica -> Oracle DW_DFAI_*).")
     return 0
 
 

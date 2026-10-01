@@ -2,7 +2,7 @@
 <workflow>
   <name>wf_main</name>
   <name_sync_with_filename>Y</name_sync_with_filename>
-  <description>Corrida demo: Reset H2 → Python STG → pl_demo → Run Python</description>
+  <description>Corrida DFAI: Reset H2 → create STG → Sheets a H2 → Python a Oracle</description>
   <extended_description/>
   <created_user>-</created_user>
   <modified_user>-</modified_user>
@@ -87,27 +87,28 @@ PY=python3
       <attributes_hac/>
     </action>
     <action>
-      <filename>${PROJECT_HOME}/pipelines/pl_demo.hpl</filename>
-      <params_from_previous>N</params_from_previous>
-      <exec_per_row>N</exec_per_row>
-      <clear_rows>N</clear_rows>
-      <clear_files>N</clear_files>
-      <create_parent_folder>N</create_parent_folder>
+      <filename/>
+      <work_directory>${PROJECT_HOME}</work_directory>
+      <arguments/>
+      <arg_from_previous>N</arg_from_previous>
       <set_logfile>N</set_logfile>
-      <set_append_logfile>N</set_append_logfile>
       <logfile/>
       <logext/>
       <add_date>N</add_date>
       <add_time>N</add_time>
       <loglevel>Basic</loglevel>
-      <wait_until_finished>Y</wait_until_finished>
-      <parameters>
-        <pass_all_parameters>Y</pass_all_parameters>
-      </parameters>
-      <run_configuration>local</run_configuration>
-      <name>Pipeline demo</name>
-      <description>pl_demo.hpl — DEMO_TABLA_EJEMPLO</description>
-      <type>PIPELINE</type>
+      <exec_per_row>N</exec_per_row>
+      <set_append_logfile>N</set_append_logfile>
+      <insertScript>Y</insertScript>
+      <script>set -e
+cd "${PROJECT_HOME}"
+PY=python3
+[ -x .venv/bin/python ] &amp;&amp; PY=.venv/bin/python
+"$PY" python/cargar_sheets.py
+</script>
+      <name>Cargar Sheets H2</name>
+      <description>Google Sheets → STG_GS1_RSDRD, STG_GS2_MEDIDAS, STG_GS3_MULTAS</description>
+      <type>SHELL</type>
       <attributes/>
       <xloc>528</xloc>
       <yloc>192</yloc>
@@ -135,7 +136,7 @@ PY=python3
 "$PY" python/main.py
 </script>
       <name>Run Python</name>
-      <description>python/main.py → logica/demo.py → Excel</description>
+      <description>python/main.py → logica/dfai_registro.py → Oracle DW_DFAI_*</description>
       <type>SHELL</type>
       <attributes/>
       <xloc>688</xloc>
@@ -171,13 +172,13 @@ PY=python3
     </hop>
     <hop>
       <from>Python create STG</from>
-      <to>Pipeline demo</to>
+      <to>Cargar Sheets H2</to>
       <evaluation>Y</evaluation>
       <unconditional>N</unconditional>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Pipeline demo</from>
+      <from>Cargar Sheets H2</from>
       <to>Run Python</to>
       <evaluation>Y</evaluation>
       <unconditional>N</unconditional>
@@ -193,8 +194,7 @@ PY=python3
   </hops>
   <notepads>
     <notepad>
-      <note>Arquetipo mínimo: Reset → create STG → pl_demo → Run Python.
-Añadir pl_stage_* en Fase 2 (ver CHECKPOINTS.md#fase-2).</note>
+      <note>DFAI: Reset → create STG → cargar_sheets.py → main.py (Oracle DW_DFAI_*).</note>
       <markdown>N</markdown>
       <notetype>GENERAL</notetype>
       <fontname>Segoe UI</fontname>

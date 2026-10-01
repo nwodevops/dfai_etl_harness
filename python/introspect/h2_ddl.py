@@ -6,6 +6,7 @@ No extrae filas. La conexión JDBC vive en h2_conn (compartida).
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,6 +39,8 @@ class Column:
 
 def sanitize_ident(name: str, used: set[str] | None = None) -> str:
     raw = "" if name is None else str(name).strip()
+    raw = unicodedata.normalize("NFKD", raw)
+    raw = "".join(ch for ch in raw if not unicodedata.combining(ch))
     s = IDENT_RE.sub("_", raw)
     s = re.sub(r"_+", "_", s).strip("_")
     if not s:
