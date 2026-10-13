@@ -19,7 +19,9 @@ El patrón ya usado en `etl_informes_harness/run_wf_main.bat`: carpeta `logs/`, 
 - Nombre: `logs/<origen>_YYYYMMDD.log`
   - `init` — `./init.sh` o `init.bat`
   - `wf_main` — Hop o `run_wf_main.sh` / `run_wf_main.bat`
-- Misma ruta relativa en Linux y en Windows. Si el día ya tiene archivo, se le agrega. No se trunca al empezar otra corrida y no se borra al terminar.
+- Misma ruta relativa en Linux y en Windows. No se borra al terminar.
+- `init`: si el día ya tiene archivo, se le agrega.
+- `run_wf_main.bat`: al empezar borra `logs/wf_main_YYYYMMDD.log` y lo reescribe. Queda la última corrida programada de ese día. Es el comportamiento de los `.bat` ya probados; no lo cambies a append.
 
 ## Qué queda escrito
 

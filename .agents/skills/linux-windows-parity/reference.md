@@ -1,10 +1,10 @@
 # Referencia — paridad Linux / Windows
 
-Hechos de la corrida `fase-4` (`progress/impl_fase-4-windows.md`). No redescubrirlos.
+Gotchas del arquetipo. No redescubrirlos en cada proyecto.
 
 ## Esquema Oracle
 
-`python/io/escribir_oracle.py` leía `APP` fijo. En remote el usuario es `REPOCSEP` y Oracle respondió `ORA-01918: el usuario 'APP' no existe`. El esquema sale de `DB_ORA_DW_SCHEMA` (`environments/local.json` = `APP`, `environments/remote.json` = `REPOCSEP`). Si falta, `require_live_conn` usa el usuario en mayúsculas.
+No escribas el esquema en el SQL. El de `local` no es el de `remote`, y un literal del entorno de desarrollo falla en el otro con `ORA-01918` (el usuario no existe). El esquema sale de `DB_ORA_DW_SCHEMA`. Si falta, `require_live_conn` usa el usuario en mayúsculas.
 
 ## switch-env
 
@@ -18,20 +18,22 @@ Los dos scripts deben crear `project-config.json` si no existe y sobreponer `DB_
 
 ## H2
 
-`mem:csep` en `localhost:9092` lo comparten `compromisos_`, `dfai_`, `diego_`, `etl_informes_` y `multa_`. Todos hacen `DROP ALL OBJECTS`. No solapar corridas. `init.bat` encadena los cuatro pasos en un proceso para acortar esa ventana. No es aislamiento.
+`mem:csep` en `localhost:9092` lo comparten los ETL de la misma máquina Windows. Todos hacen `DROP ALL OBJECTS`. No solapar corridas. `init.bat` encadena los pasos en un proceso para acortar esa ventana. No es aislamiento.
 
 En Windows el server es la tarea `H2_SERVICE_MEM_CSEP`. `reset_and_create.bat` no lo mata: comprueba el puerto y reaplica `00_reset.sql` + `01_schema.sql`. En Linux `reset_and_create.sh` sí hace stop + start, y `start_h2.sh` necesita `nohup` o Hop se queda colgado.
 
-Cambiar la base a `mem:dfai` es decisión de equipo: hoy los `.sh` y `.bat` de `h2/scripts/` tienen `mem:csep` fijo.
+La base sigue siendo `mem:csep` en los `.sh` y `.bat` de `h2/scripts/`. Otra base es decisión del proyecto, no del arquetipo.
 
 ## Hop Windows
 
 ```bat
-D:\Eder\hop\hop-run.bat -j dfai_etl_harness -r local -f <repo>\workflows\wf_main_windows.hwf -l BASIC
+D:\Eder\hop\hop-run.bat -j <carpeta> -r local -f <repo>\workflows\wf_main_windows.hwf -l BASIC
 ```
 
-`HOP_HOME` y `%USERPROFILE%\apps\hop` no existen en ese equipo. El proyecto Hop se llama como la carpeta.
+El Programador de tareas no pega ese comando: ejecuta `run_wf_main.bat` (plantilla en esta skill). `--runconfig=local` es el motor Hop, no el entorno `remote`.
+
+`HOP_HOME` y `%USERPROFILE%\apps\hop` pueden no existir; el `.bat` igual los prueba, y cae en `D:\Eder\hop`. El proyecto Hop se llama como la carpeta. Excepción ya en producción, no copiarla: `datawarehouse_multa_etl` se registra como `multa_informes_etl` y su workflow es `wf_main_win.hwf`.
 
 ## Red y pandas
 
-`sheets.googleapis.com` dio `getaddrinfo failed` de forma intermitente. Fallan juntos `create_stg.py` (introspección) y `cargar_sheets.py`. Reintentar la corrida. Windows resolvió `pandas>=2.0` a 3.0.6; no fijar otra versión sin mirar el venv de Linux.
+`sheets.googleapis.com` puede dar `getaddrinfo failed` de forma intermitente. Fallan juntos `create_stg.py` (introspección) y la carga de hojas. Reintentar la corrida. No fijar otra versión de pandas sin mirar el venv de Linux.
